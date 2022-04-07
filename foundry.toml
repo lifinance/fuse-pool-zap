@@ -1,4 +1,5 @@
 [default]
+solc_version = '0.8.13'
 # Enables or disables the optimizer
 optimizer = true
 # The number of optimizer runs

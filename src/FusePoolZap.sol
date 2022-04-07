@@ -17,6 +17,10 @@ interface IFToken {
 /// @author LI.FI (https://li.fi)
 /// @notice Allows anyone to quickly zap into a Rari Fuse Pool
 contract FusePoolZap {
+    /// Constants ///
+    address private constant NULL_ADDRESS =
+        0x0000000000000000000000000000000000000000;
+
     /// Errors ///
 
     error InvalidPoolAddress(address);
@@ -27,7 +31,7 @@ contract FusePoolZap {
 
     /// Events ///
 
-    event ZappedIn(address indexed pool, address fToken, uint256 amount);
+    event ZappedIn(address pool, address fToken, uint256 amount);
 
     /// Public Methods ///
 
@@ -39,43 +43,28 @@ contract FusePoolZap {
         address _pool,
         address _supplyToken,
         uint256 _amount
-    ) external payable {
-        if (_pool == address(0)) {
-            revert InvalidPoolAddress(_pool);
-        }
-
-        if (_amount <= 0) {
-            revert InvalidAmount(_amount);
-        }
-
-        if (_supplyToken == address(0) && _amount != msg.value) {
-            revert InvalidAmount(msg.value);
-        }
-
-        IFToken fToken = IFToken(
-            IFusePool(_pool).cTokensByUnderlying(_supplyToken)
-        );
-
-        if (address(fToken) == address(0)) {
-            revert InvalidSupplyToken(_supplyToken);
-        }
-
-        uint256 preMintBalance = ERC20(address(fToken)).balanceOf(
-            address(this)
-        );
-
-        uint256 mintAmount;
-        if (_supplyToken == address(0)) {
-            if (!fToken.isCEther()) revert CannotDepositNativeToken();
-            // Use call because method can succeed with partial revert
-            (bool success, bytes memory res) = address(fToken).call{
-                value: msg.value
-            }(abi.encodeWithSignature("mint()"));
-            mintAmount = ERC20(address(fToken)).balanceOf(address(this));
-            if (!success && mintAmount == 0) {
-                revert MintingError(res);
+    ) external {
+        unchecked {
+            if (_pool == NULL_ADDRESS) {
+                revert InvalidPoolAddress(_pool);
             }
-        } else {
+
+            if (_amount <= 0) {
+                revert InvalidAmount(_amount);
+            }
+
+            IFToken fToken = IFToken(
+                IFusePool(_pool).cTokensByUnderlying(_supplyToken)
+            );
+
+            if (address(fToken) == NULL_ADDRESS) {
+                revert InvalidSupplyToken(_supplyToken);
+            }
+
+            uint256 preMintBalance = ERC20(address(fToken)).balanceOf(
+                address(this)
+            );
+
             ERC20(_supplyToken).transferFrom(
                 msg.sender,
                 address(this),
@@ -83,13 +72,57 @@ contract FusePoolZap {
             );
             ERC20(_supplyToken).approve(address(fToken), _amount);
             fToken.mint(_amount);
-            mintAmount = ERC20(address(fToken)).balanceOf(address(this));
+
+            uint256 mintAmount = ERC20(address(fToken)).balanceOf(
+                address(this)
+            ) - preMintBalance;
+
+            ERC20(address(fToken)).transfer(msg.sender, mintAmount);
+
+            emit ZappedIn(_pool, address(fToken), mintAmount);
         }
+    }
 
-        mintAmount = mintAmount - preMintBalance;
+    /// @notice Given ETH receive fETH from a given Fuse pool
+    /// @param _pool Rari Fuse Pool contract address
+    function zapIn(address _pool) external payable {
+        unchecked {
+            if (_pool == NULL_ADDRESS) {
+                revert InvalidPoolAddress(_pool);
+            }
 
-        ERC20(address(fToken)).transfer(msg.sender, mintAmount);
+            if (msg.value <= 0) {
+                revert InvalidAmount(msg.value);
+            }
 
-        emit ZappedIn(_pool, address(fToken), mintAmount);
+            IFToken fToken = IFToken(
+                IFusePool(_pool).cTokensByUnderlying(NULL_ADDRESS)
+            );
+
+            if (address(fToken) == NULL_ADDRESS) {
+                revert InvalidSupplyToken(NULL_ADDRESS);
+            }
+
+            uint256 preMintBalance = ERC20(address(fToken)).balanceOf(
+                address(this)
+            );
+
+            // Use call because method can succeed with partial revert
+            (bool success, bytes memory res) = address(fToken).call{
+                value: msg.value
+            }(abi.encodeWithSignature("mint()"));
+            uint256 mintAmount = ERC20(address(fToken)).balanceOf(
+                address(this)
+            );
+            if (!success && mintAmount == 0) {
+                revert MintingError(res);
+            }
+
+            mintAmount = mintAmount - preMintBalance;
+
+            ERC20(address(fToken)).transfer(msg.sender, mintAmount);
+
+            emit ZappedIn(_pool, address(fToken), mintAmount);
+        }
     }
 }

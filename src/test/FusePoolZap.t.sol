@@ -48,7 +48,7 @@ contract FusePoolZapTest is DSTest {
 
         uint256 amount = 0.01 ether;
 
-        zap.zapIn{value: amount}(TRIBE_FUSE_POOL, address(0), amount);
+        zap.zapIn{value: amount}(TRIBE_FUSE_POOL);
 
         // Should get 0.05 fETHER back
         assertEq(ERC20(FETHER).balanceOf(DEPOSITOR), 0.05 ether);
