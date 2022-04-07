@@ -1,0 +1,5 @@
+[default]
+# Enables or disables the optimizer
+optimizer = true
+# The number of optimizer runs
+optimizer_runs = 10000
