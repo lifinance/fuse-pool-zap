@@ -17,17 +17,7 @@ contract FusePoolZapTest is DSTest {
         users = utils.createUsers(5);
     }
 
-    function testExample() public {
-        address payable alice = users[0];
-        // labels alice's address in call traces as "Alice [<address>]"
-        vm.label(alice, "Alice");
-        console.log("alice's address", alice);
-        address payable bob = users[1];
-        vm.label(bob, "Bob");
-
-        vm.prank(alice);
-        (bool sent, ) = bob.call{value: 10 ether}("");
-        assertTrue(sent);
-        assertGt(bob.balance, alice.balance);
+    function testCanZapIn() public {
+        // TODO
     }
 }
