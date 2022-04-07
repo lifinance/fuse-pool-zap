@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0;
 
 import {DSTest} from "ds-test/test.sol";
-import {Utilities} from "./utils/Utilities.sol";
 import {console} from "./utils/Console.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
@@ -23,13 +22,7 @@ contract FusePoolZapTest is DSTest {
     address internal constant DEPOSITOR =
         0x47Bc10781E8f71c0e7cf97B0a5a88F4CFfF21309;
 
-    Utilities internal utils;
-    address payable[] internal users;
-
-    //
     function setUp() public {
-        utils = new Utilities();
-        users = utils.createUsers(5);
         zap = new FusePoolZap();
     }
 
