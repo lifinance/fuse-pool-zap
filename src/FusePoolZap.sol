@@ -13,6 +13,9 @@ interface IFToken {
     function mint(uint256) external returns (uint256);
 }
 
+/// @title Fuse Pool Zap
+/// @author LI.FI (https://li.fi)
+/// @notice Allows anyone to quickly zap into a Rari Fuse Pool
 contract FusePoolZap {
     /// Errors ///
 
