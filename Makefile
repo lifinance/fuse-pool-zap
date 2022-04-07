@@ -14,4 +14,4 @@ trace   :; forge test --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER} 
 watch   :; forge test --watch src test --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER} -vv
 clean  :; forge clean
 snapshot :; forge snapshot --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER}
-deploy :; forge create --rpc-url ${RPC_URL} --private-key ${PRIVATE_KEY} "src/FusePoolZap.sol:FusePoolZap"
+deploy :; forge create --rpc-url ${RPC_URL} --private-key ${PRIVATE_KEY} src/FusePoolZap.sol:FusePoolZap
