@@ -13,4 +13,4 @@ test   :; forge test --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER} -
 trace   :; forge test --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER} -vvv
 watch   :; forge test --watch src test --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER} -vv
 clean  :; forge clean
-snapshot :; forge snapshot
+snapshot :; forge snapshot --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER}

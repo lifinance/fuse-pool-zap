@@ -8,7 +8,7 @@ interface IFusePool {
 }
 
 interface IFToken {
-    function mint() external payable returns (uint256);
+    function isCEther() external returns (bool);
 
     function mint(uint256) external returns (uint256);
 }
@@ -22,6 +22,8 @@ contract FusePoolZap {
     error InvalidPoolAddress(address);
     error InvalidSupplyToken(address);
     error InvalidAmount(uint256);
+    error CannotDepositNativeToken();
+    error MintingError(bytes);
 
     /// Events ///
 
@@ -58,10 +60,21 @@ contract FusePoolZap {
             revert InvalidSupplyToken(_supplyToken);
         }
 
-        uint256 mintAmount;
+        uint256 preMintBalance = ERC20(address(fToken)).balanceOf(
+            address(this)
+        );
 
+        uint256 mintAmount;
         if (_supplyToken == address(0)) {
-            mintAmount = fToken.mint{value: msg.value}();
+            if (!fToken.isCEther()) revert CannotDepositNativeToken();
+            // Use call because method can succeed with partial revert
+            (bool success, bytes memory res) = address(fToken).call{
+                value: msg.value
+            }(abi.encodeWithSignature("mint()"));
+            mintAmount = ERC20(address(fToken)).balanceOf(address(this));
+            if (!success && mintAmount == 0) {
+                revert MintingError(res);
+            }
         } else {
             ERC20(_supplyToken).transferFrom(
                 msg.sender,
@@ -69,8 +82,11 @@ contract FusePoolZap {
                 _amount
             );
             ERC20(_supplyToken).approve(address(fToken), _amount);
-            mintAmount = fToken.mint(_amount);
+            fToken.mint(_amount);
+            mintAmount = ERC20(address(fToken)).balanceOf(address(this));
         }
+
+        mintAmount = mintAmount - preMintBalance;
 
         ERC20(address(fToken)).transfer(msg.sender, mintAmount);
 
