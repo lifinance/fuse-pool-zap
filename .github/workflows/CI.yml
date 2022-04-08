@@ -25,4 +25,4 @@ jobs:
         run: yarn run lint:check
 
       - name: Run tests
-        run: forge test
+        run: forge test --fork-url ${{ secrets.TEST_RPC_URL }} --fork-block-number ${{ secrets.BLOCK_NUMBER }}
